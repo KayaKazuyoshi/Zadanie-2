@@ -1,0 +1,137 @@
+---
+  title: "Zadanie zaliczeniowe nr 2"
+  author: "Igor Korczak-Kubalski"
+  output: html_document
+---
+
+  Instalujemy pakiet ggplot2 w celu stworzenia wykresu.
+  
+```{r}
+
+  library(dplyr)
+  library(RWeka)
+  library(readxl)
+  library(ggplot2)
+  
+```
+##IMDB
+Na platformie OpemML wyszukujemy dane wykorzystując filtr ograniczający wyniki do posiadających przynajmniej 10 zmiennych i 10 000 obserwacji.
+Po odnalezieniu przykładowych danych, pobieramy plik arff.
+
+```{r}
+
+IMDB <- read.arff("")
+head(IMDB)
+
+```
+Zauważamy, że dane pomimo klasy numeryczne, zawierają wyłącznie wartości 0 lub 1, więc nie kontynuujemy dalszej analizy.
+
+##Uprawy
+W repozytorium dane.gov.pl odnajdujemy dane.
+
+```{r}
+Uprawy <- read_xlsx("")
+head(Uprawy)
+
+```
+Zauważamy, że dane mają wyłącznie klasę character (możliwe byłoby przekształcenie na inne klasy, jednak mogłoby to spowodować błędy przy analizie), więc nie kontynuujemy dalszej pracy.
+
+##Subscribed
+Kontynuując przeszukiwanie repozytorium Kaggle, odnajdujemy dane dotyczące Subskrybcji na platformie YouTube.
+
+```{r}
+Subscribed <- read.csv("")
+head(Subscribed)
+
+```
+Sprawdzamy liczbę kategorii w kolumnie Category.
+
+```{r}
+n_cat_Category <- n_distinct(Subscribed$Category)
+print(n_cat_Category)
+```
+Sprawdzamy klasę w kolumnie Subscribers.
+
+```{r}
+class(Subscribed$Subscribers)
+
+```
+Jako że są to dane character, decydujemy się na przekształcenie ich na dane numeryczne. Oprócz tego musimy usunąć znak ",". 
+
+```{r}
+Subscribed$Subscribers <- as.numeric(gsub(",","",as.character(Subscribed$Subscribers)))
+
+```
+Ze względu na niepełne dane w kolumnach Video.Views i Video.Count, porzucamy dalszą analizę tej ramki danych.
+
+##Amazon
+Na platformie OpemML wyszukujemy dane wykorzystując filtr ograniczający wyniki do plików csv, posiadających przynajmniej 10 zmiennych i 10 000 obserwacji.
+Po odnalezieniu przykładowych danych przechodzimy do źródła na platformę Kaggle i po założeniu konta pobieramy plik csv
+
+```{r}
+Amazon_employees_test <- read.csv("")
+head(Amazon_employees_test)
+Amazon_employees_trening <- read.csv("")
+head(Amazon_employees_trening)
+
+```
+
+Zmieniamy etykietę kolumny "id" na "ACTION" w celu połączenia obu ramek danych.
+
+```{r}
+colnames(Amazon_employees_test)[1] <- "ACTION"
+
+```
+
+Łączymy obie ramki danych.
+
+```{r}
+Amazon_employees <- rbind(Amazon_employees_test, Amazon_employees_trening)
+
+```
+Usuwamy zbędne kolumny ID.
+
+```{r}
+x <- 0
+repeat {
+  x <- x+1
+  Amazon_employees <- Amazon_employees[-1]
+  if (x == 3){
+    break
+  }
+}
+
+```
+Przy użyciu funkcji liczenia kategorii, sprawdzamy ile kategorii mają wybrane zmienne.
+
+```{r}
+for (i in 1:ncol(Amazon_employees)) {
+  print(n_distinct(Amazon_employees[i]))
+}
+
+```
+Ze względu na zbyt duże liczby kategorii (najmniej liczna zmienna ma 68 kategorii) porzucamy dalszą pracę nad tymi danymi.
+Tworzymy wektor zbierający etykiety kolumn.
+
+```{r}
+column_names <- c("Lp.", "Nazwa zbioru danych", "Adres", "Przyczyna odrzucenia")
+
+```
+Uzupełniamy zawartość wierszy odrzuconych ramek danych.
+
+```{r}
+IMDB_denied_data <- data.frame(1, "IMDB", "")
+colnames(IMDB_denied_data) <- column_names
+
+Uprawy_denied_data <- data.frame(2, "Uprawy", "")
+colnames(Uprawy_denied_data) <- column_names
+
+Subscribed_denied_data <- data.frame(3, "Subscribed", "", "Niepełne dane")
+colnames(Subscribed_denied_data) <- column_names
+
+Amazon_denied_data <- data.frame(4, "Amazon", "", "Zbyt wiele kategorii")
+colnames(Amazon_denied_data) <- column_names
+
+Denied_data <- rbind(IMDB_denied_data, Uprawy_denied_data, Subscribed_denied_data, Amazon_denied_data)
+
+```
